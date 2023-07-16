@@ -17,7 +17,7 @@ export function convertMp3ToWav(mp3Filename: string): Promise<string> {
     ffmpeg(mp3Filename)
       .audioChannels(2)
       .audioFrequency(44100)
-      .on("error", (err) => {
+      .on("error", (err: any) => {
         reject(err);
       })
       .on("end", () => {
