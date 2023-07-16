@@ -4,6 +4,6 @@
     "module": "CommonJS",
     "outDir": "dist"
   },
-  "include": ["src/bot.ts", "environment.d.ts"],
+  "include": ["src/index.ts", "environment.d.ts"],
   "exclude": ["node_modules"]
 }
