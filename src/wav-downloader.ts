@@ -4,7 +4,6 @@ import { promisify } from "util";
 import { convertMp3ToWav } from "./mp3-to-wav";
 import { formatFileName } from "./format-file-name";
 import { exec as callbackExec } from "child_process";
-import { Input } from "telegraf";
 
 const exec = promisify(callbackExec);
 

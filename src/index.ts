@@ -1,9 +1,6 @@
-import { Bot, InlineKeyboard, webhookCallback } from "grammy";
-import { chunk } from "lodash";
+import { Bot, webhookCallback } from "grammy";
 import express from "express";
-import { applyTextEffect, Variant } from "./textEffects";
-
-import type { Variant as TextEffectVariant } from "./textEffects";
+import { wavDownloader } from "./wav-downloader";
 
 // Create a bot using the Telegram token
 const bot = new Bot(process.env.TELEGRAM_TOKEN || "");
@@ -14,22 +11,13 @@ const introductionMessage = `Aqui estão todos os comandos disponíveis:
 // Handle the /yo command to greet the user
 bot.command("ola", (ctx) => ctx.reply(`Yo ${ctx.from?.username}`));
 
-// Suggest commands in the menu
-bot.api.setMyCommands([
-  { command: "ola", description: "Be greeted by the bot" },
-  {
-    command: "baixarMusicas",
-    description: "Baixar uma ou várias músicas",
-  },
-]);
-
-bot.command("baixarMusicas", (ctx: any) => {
+bot.command("baixar", (ctx: any) => {
   ctx.reply(`Mande um ou vários links do YouTube.`);
   bot.on("message", async (ctx: any) => {
     try {
       // logger();
       await ctx.reply(`Validando URL's...`);
-      // await wavDownloader(ctx.message.text, ctx);
+      await wavDownloader(ctx.message.text, ctx);
       await ctx.reply(`Músicas processadas.`);
       await ctx.reply("👍");
       ctx.reply(`
@@ -48,6 +36,15 @@ bot.command("baixarMusicas", (ctx: any) => {
 });
 
 // Handle all other messages and the /start command
+
+// Suggest commands in the menu
+bot.api.setMyCommands([
+  { command: "ola", description: "Be greeted by the bot" },
+  {
+    command: "baixar",
+    description: "Baixar uma ou várias músicas",
+  },
+]);
 
 const replyWithIntro = (ctx: any) => ctx.reply(introductionMessage);
 
