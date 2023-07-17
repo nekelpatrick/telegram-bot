@@ -1,6 +1,6 @@
 name: Docker Image CI
 
-
+concurrency: cyclic:prod 
 
 on:
   push:
@@ -13,8 +13,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    environment: production
-    concurrency: production
+    environment: cyclic:prod 
+  
     
     steps:
     - uses: actions/checkout@v3
