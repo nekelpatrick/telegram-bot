@@ -15,7 +15,7 @@ RUN apt-get update && \
     apt-get install -y python3 ffmpeg
 
 # Copy the rest of the project files to the container
-COPY . .
+COPY dist/ ./dist
 
 # Start the application
 CMD [ "npm", "start" ]
