@@ -19,6 +19,28 @@ const driveRefreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN || "";
 const exec = promisify(callbackExec);
 
 export async function wavDownloader(inputData: any, ctx: any) {
+  console.log("wavDownloader called");
+
+  function extractUrls(data: string, ctx: any) {
+    console.log("Extracted URLs: ", data);
+
+    if (typeof data !== "string") {
+      ctx.reply("O formato enviado não é válido.");
+      throw new TypeError("O formato enviado não é válido.");
+    }
+
+    const regex =
+      /(https?:\/\/(www\.)?youtube\.com\/watch\?v=.{11}|https?:\/\/youtu.be\/.{11})/g;
+    const matches = data.match(regex);
+
+    if (!matches) {
+      ctx.reply("Não foram encontrados URL's do Youtube.");
+      throw new Error("Não foram encontrados URL's do Youtube.");
+    }
+
+    return matches;
+  }
+
   const googleDriveService = new GoogleDriveService(
     driveClientId,
     driveClientSecret,
@@ -29,6 +51,21 @@ export async function wavDownloader(inputData: any, ctx: any) {
   const currentMonth = new Date().getMonth();
   const musicDirectoryPath = `./tmp`;
 
+  const monthsInPtBr = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+  const folderName = monthsInPtBr[currentMonth];
   let folder = await googleDriveService
     .searchFolder(`musicas-pai/${monthsInPtBr[currentMonth]}`)
     .catch((error) => {
@@ -100,38 +137,3 @@ export async function wavDownloader(inputData: any, ctx: any) {
     ctx.reply("Nenhuma URL encontrada na entrada.");
   }
 }
-
-function extractUrls(data: string, ctx: any) {
-  if (typeof data !== "string") {
-    ctx.reply("O formato enviado não é válido.");
-    throw new TypeError("O formato enviado não é válido.");
-  }
-
-  const regex =
-    /(https?:\/\/(www\.)?youtube\.com\/watch\?v=.{11}|https?:\/\/youtu.be\/.{11})/g;
-  const matches = data.match(regex);
-
-  if (!matches) {
-    ctx.reply("Não foram encontrados URL's do Youtube.");
-    throw new Error("Não foram encontrados URL's do Youtube.");
-  }
-
-  return matches;
-}
-
-const currentMonth = new Date().getMonth();
-const monthsInPtBr = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
-const folderName = monthsInPtBr[currentMonth];
