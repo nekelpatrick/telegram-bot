@@ -1,26 +1,28 @@
 # Use an official Node.js runtime as the base image
-FROM node:14
+FROM node:alpine
 
 # Set the working directory in the container
 WORKDIR .
 
+# Install Python and FFmpeg
+RUN apk update && \
+    apk add python3 ffmpeg
+
+
 # Copy the package.json and package-lock.json files to the container
-COPY package.json package-lock.json ./
+COPY package.json .
 
 # Install project dependencies
 RUN npm install
-
-# Build TypeScript files
-RUN npm run build
-
-
-# Install Python and FFmpeg
-RUN apt-get update && \
-    apt-get install -y python3 ffmpeg
-
+RUN npm i typescript -g --save
 
 # Copy the rest of the project files to the container
 COPY . .
+
+
+
+# Build TypeScript files
+RUN tsc
 
 
 # Start the application
