@@ -27,7 +27,7 @@ export async function wavDownloader(inputData: any, ctx: any) {
   );
 
   const currentMonth = new Date().getMonth();
-  const musicDirectoryPath = `./temp_music`;
+  const musicDirectoryPath = `./tmp`;
 
   let folder = await googleDriveService
     .searchFolder(`musicas-pai/${monthsInPtBr[currentMonth]}`)
