@@ -1,29 +1,50 @@
 export function formatFileName(fileName: string) {
-  const nameRegex =
-    /^(.+?)(?: - [^[]+)?(?: - [\w\s]+)?(?: \[\w+\])?(?:\.[\w\d]+)?$/;
-  const match = nameRegex.exec(fileName);
+  let newName = fileName;
 
-  if (match) {
-    let newName = match[1]
-      .toLowerCase()
-      .replace(/karaoke/g, "") // remove 'karaoke'
-      .replace(/playback/g, "") // remove 'playback'
-      .replace(/oficial/g, "") // remove 'oficial'
-      .replace(/qualidade/g, "") // remove 'qualidade'
-      .replace(/melhor/g, "") // remove 'melhor'
-      .replace(/\d+/g, "") // remove numbers
-      .replace(/[-_=+]/g, " ") // replace '-_=+' with ' '
-      .replace(/[^\w\s]/gi, "") // remove special characters
-      .replace(/\s*\.\s*$/, "") // remove trailing '.'
-      .replace(/\s*-\s*$/, "") // remove trailing '-'
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
+  const removeWords = [
+    "karaoke",
+    "playback",
+    "oficial",
+    "qualidade",
+    "melhor",
+    "com letra",
+    "musica com primeira voz e letra",
+    "playback oficial melhor qualidade",
+    "playback oficial com letra",
+    "jn karaoke",
+    "karaokê tchô",
+    "2 tons abaixo",
+    "playback oficial",
+  ];
 
-    return newName + ".mp3";
+  const removePatterns = [
+    /\d+/g, // remove numbers
+    /[-_=+]/g, // replace '-_=+' with ' '
+    /[^\w\s]/gi, // remove special characters
+    /\s*\.\s*$/, // remove trailing '.'
+    /\s*-\s*$/, // remove trailing '-'
+  ];
+
+  // convert to lower case for comparison
+  newName = newName.toLowerCase();
+
+  // remove unwanted words
+  for (const word of removeWords) {
+    newName = newName.replace(word, "");
   }
 
-  return fileName;
+  // apply removal patterns
+  for (const pattern of removePatterns) {
+    newName = newName.replace(pattern, " ");
+  }
+
+  // convert to title case and trim spaces
+  newName = newName
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return newName + ".mp3";
 }
