@@ -3,9 +3,6 @@ import express from "express";
 import { Bot, Context, SessionFlavor, session, webhookCallback } from "grammy";
 import { baixarCommand } from "./commands/baixarCommand";
 import dotenv from "dotenv";
-import * as path from "path";
-import * as fs from "fs";
-import { GoogleDriveService } from "./googleDriveService";
 
 dotenv.config();
 

@@ -1,12 +1,13 @@
 import dotenv from "dotenv";
-import { GoogleDriveService } from "./googleDriveService";
+import * as path from "path";
+import * as fs from "fs/promises";
 import { promisify } from "util";
+import { exec as callbackExec } from "child_process";
 import { convertMp3ToWav } from "./mp3-to-wav";
 import { formatFileName } from "./format-file-name";
-import { exec as callbackExec } from "child_process";
-import fs from "fs/promises";
-
-const exec = promisify(callbackExec);
+import { GoogleDriveService } from "./googleDriveService";
+import youtubedl from "youtube-dl-exec";
+import { YtFlags } from "./yt-types";
 
 dotenv.config();
 
@@ -15,6 +16,8 @@ const driveClientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET || "";
 const driveRedirectUri = process.env.GOOGLE_DRIVE_REDIRECT_URI || "";
 const driveRefreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN || "";
 
+const exec = promisify(callbackExec);
+
 export async function wavDownloader(inputData: any, ctx: any) {
   const googleDriveService = new GoogleDriveService(
     driveClientId,
@@ -22,69 +25,60 @@ export async function wavDownloader(inputData: any, ctx: any) {
     driveRedirectUri,
     driveRefreshToken
   );
+
   const currentMonth = new Date().getMonth();
-  const monthsInPtBr = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro",
-  ];
-  const folderName = monthsInPtBr[currentMonth];
+  const musicDirectoryPath = `./temp_music`;
 
   let folder = await googleDriveService
-    .searchFolder(folderName)
+    .searchFolder(`musicas-pai/${monthsInPtBr[currentMonth]}`)
     .catch((error) => {
       console.error(error);
       return null;
     });
 
   if (!folder) {
-    folder = await googleDriveService.createFolder(folderName);
+    folder = await googleDriveService.createFolder(
+      `musicas-pai/${monthsInPtBr[currentMonth]}`
+    );
   }
-
-  console.log("Extracting URLs from data...");
-  ctx.reply("Extracting URLs from input...");
 
   const urls = extractUrls(inputData, ctx);
 
   if (urls.length > 0) {
-    console.log(`${urls.length} URLs found.`);
-    ctx.reply(`${urls.length} URLs found.`);
+    async function downloadSongs() {
+      const downloadOptions: YtFlags = {
+        audioFormat: "mp3",
+        output: `${musicDirectoryPath}/%(title)s.%(ext)s`,
+        noCheckCertificates: true,
+      };
 
-    const ytDlpCommand = `yt-dlp -x --audio-format mp3 --restrict-filenames --progress --newline ${urls.join(
-      " "
-    )}`;
+      const promises = urls.map(async (url: string) => {
+        try {
+          await youtubedl.exec(url, downloadOptions);
+        } catch (error) {
+          console.error(error);
+        }
+      });
 
-    ctx.reply("Downloading songs...");
+      await Promise.all(promises);
+    }
 
-    const { stdout, stderr } = await exec(ytDlpCommand);
-    console.log("Download complete.", stdout, stderr);
-    ctx.reply("Download complete.");
+    await downloadSongs();
 
-    console.log(
-      `Converting and uploading ${urls.length} files to Google Drive...`
-    );
-    ctx.reply(
-      `Converting and uploading ${urls.length} files to Google Drive...`
-    );
+    const files = await fs.readdir(musicDirectoryPath);
 
-    const promises = urls.map(async (url: string, index: number) => {
-      console.log(`Converting ${url} to .wav format...`);
+    const promises = files.map(async (file: string, index: number) => {
+      const oldPath = path.join(musicDirectoryPath, file);
+      const newPath = path.join(musicDirectoryPath, formatFileName(file));
 
-      const wavFilePath = await convertMp3ToWav(url);
-      console.log(`Converted to .wav format: ${wavFilePath}`);
+      await fs.rename(oldPath, newPath);
 
+      const wavFilePath = await convertMp3ToWav(newPath);
+
+      // Upload to Google Drive
       await googleDriveService
         .saveFile(
-          formatFileName(wavFilePath),
+          path.basename(wavFilePath, ".wav"),
           wavFilePath,
           "audio/wav",
           folder?.id
@@ -93,24 +87,24 @@ export async function wavDownloader(inputData: any, ctx: any) {
           console.error(error);
         });
 
-      console.log(`Deleting the original .mp3 file: ${wavFilePath}`);
+      // Delete local file after upload
       await fs.unlink(wavFilePath);
     });
 
     await Promise.all(promises);
 
-    console.log("All files have been converted and uploaded.");
-    ctx.reply("All files have been converted and uploaded.");
+    console.info("All files uploaded successfully and local files deleted!");
+    ctx.reply("Processo completo. Arquivos prontos.");
   } else {
-    console.log("No URLs found in the provided data.");
-    ctx.reply("No URLs found in the input.");
+    console.log("Nenhuma URL encontrada nos dados fornecidos.");
+    ctx.reply("Nenhuma URL encontrada na entrada.");
   }
 }
 
 function extractUrls(data: string, ctx: any) {
   if (typeof data !== "string") {
-    ctx.reply("The format sent is not valid.");
-    throw new TypeError("The format sent is not valid.");
+    ctx.reply("O formato enviado não é válido.");
+    throw new TypeError("O formato enviado não é válido.");
   }
 
   const regex =
@@ -118,9 +112,26 @@ function extractUrls(data: string, ctx: any) {
   const matches = data.match(regex);
 
   if (!matches) {
-    ctx.reply("No Youtube URLs found.");
-    throw new Error("No Youtube URLs found.");
+    ctx.reply("Não foram encontrados URL's do Youtube.");
+    throw new Error("Não foram encontrados URL's do Youtube.");
   }
 
   return matches;
 }
+
+const currentMonth = new Date().getMonth();
+const monthsInPtBr = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+const folderName = monthsInPtBr[currentMonth];

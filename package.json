@@ -45,6 +45,8 @@
     "fluent-ffmpeg": "^2.1.2",
     "grammy": "^1.11.2",
     "lodash": "^4.17.21",
-    "simple-oauth2": "^5.0.0"
+    "simple-oauth2": "^5.0.0",
+    "youtube-dl-exec": "^2.4.6",
+    "yt-dlp-wrapper": "^1.2.2"
   }
 }
