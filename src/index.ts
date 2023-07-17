@@ -33,7 +33,7 @@ bot.command("baixar", (ctx) => {
 });
 
 bot.on("message", async (ctx) => {
-  if (ctx.session.command === "baixar" && ctx.message.text) {
+  if (ctx.session.command === "baixar") {
     await baixarCommand(ctx);
   } else {
     replyWithIntro(ctx);
