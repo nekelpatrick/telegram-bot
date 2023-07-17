@@ -49,7 +49,7 @@ export async function wavDownloader(inputData: any, ctx: any) {
   );
 
   const currentMonth = new Date().getMonth();
-  const musicDirectoryPath = `./tmp`;
+  const musicDirectoryPath = `/tmp`;
 
   const monthsInPtBr = [
     "Janeiro",
