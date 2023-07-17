@@ -1,4 +1,3 @@
-// main.ts
 import express from "express";
 import { Bot, Context, SessionFlavor, session, webhookCallback } from "grammy";
 import { baixarCommand } from "./commands/baixarCommand";
@@ -15,6 +14,8 @@ interface SessionData {
 export type MyContext = SessionFlavor<SessionData> & Context;
 
 const bot = new Bot<MyContext>(process.env.TELEGRAM_TOKEN || "");
+
+bot.start();
 
 function initial(): SessionData {
   return { started: false };
@@ -71,20 +72,19 @@ console.log(process.env.GOOGLE_DRIVE_CLIENT_SECRET);
 console.log(process.env.GOOGLE_DRIVE_REDIRECT_URI);
 console.log(process.env.GOOGLE_DRIVE_REFRESH_TOKEN);
 
-if (process.env.NODE_ENV === "production") {
-  // Use Webhooks for the production server
-  const app = express();
-  app.use(express.json());
-  app.use(webhookCallback(bot, "express"));
+// if (process.env.NODE_ENV === "production") {
+//   // Use Webhooks for the production server
+//   const app = express();
+//   app.use(express.json());
+//   app.use(webhookCallback(bot, "express"));
 
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Bot listening on port ${PORT}`);
-  });
-} else {
-  // Use Long Polling for development
-  bot.start();
-}
+//   const PORT = process.env.PORT || 3000;
+//   app.listen(PORT, () => {
+//     console.log(`Bot listening on port ${PORT}`);
+//   });
+// } else {
+//   // Use Long Polling for development
+// }
 
 const introductionMessage = `Aqui estão todos os comandos disponíveis:
 - /baixar: Baixar músicas a partir de URLs do YouTube`;
