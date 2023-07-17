@@ -3,7 +3,7 @@ import { Bot, Context, SessionFlavor, session, webhookCallback } from "grammy";
 import { baixarCommand } from "./commands/baixarCommand";
 import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
 
 interface SessionData {
   started?: boolean;
