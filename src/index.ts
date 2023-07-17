@@ -67,7 +67,7 @@ bot.on("message", async (ctx) => {
   console.log("Received a message");
   console.log(ctx.session);
 
-  if (ctx.session.command === "baixar" && ctx.message.text) {
+  if (ctx.session.command === "baixar") {
     await baixarCommand(ctx.message.text);
   } else if (ctx.session.command !== "baixar") {
     replyWithIntro(ctx);
