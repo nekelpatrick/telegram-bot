@@ -22,7 +22,7 @@ export async function wavDownloader(inputData: any, ctx: any) {
   console.log("wavDownloader called");
 
   function extractUrls(data: string, ctx: any) {
-    console.log("Extracted URLs: ", data);
+    console.log("Extracting URLs");
 
     if (typeof data !== "string") {
       ctx.reply("O formato enviado não é válido.");
@@ -37,6 +37,7 @@ export async function wavDownloader(inputData: any, ctx: any) {
       ctx.reply("Não foram encontrados URL's do Youtube.");
       throw new Error("Não foram encontrados URL's do Youtube.");
     }
+    console.log("Extracted URLs: ", matches);
 
     return matches;
   }
@@ -65,7 +66,6 @@ export async function wavDownloader(inputData: any, ctx: any) {
     "Novembro",
     "Dezembro",
   ];
-  const folderName = monthsInPtBr[currentMonth];
   let folder = await googleDriveService
     .searchFolder(`musicas-pai/${monthsInPtBr[currentMonth]}`)
     .catch((error) => {
@@ -90,6 +90,7 @@ export async function wavDownloader(inputData: any, ctx: any) {
       };
 
       const promises = urls.map(async (url: string) => {
+        console.log("downloading songs");
         try {
           await youtubedl.exec(url, downloadOptions);
         } catch (error) {
