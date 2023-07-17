@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "preinstall": "YOUTUBE_DL_SKIP_PYTHON_CHECK=1 apt-get update && apt-get install -y python3 ffmpeg",
+    "preinstall": "apt-get update && apt-get install -y python3 ffmpeg",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "env-cmd ts-node-dev src/index.ts",
