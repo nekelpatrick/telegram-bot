@@ -1,6 +1,5 @@
 name: Docker Image CI
 
-concurrency: production
 
 
 on:
@@ -15,6 +14,7 @@ jobs:
 
     runs-on: ubuntu-latest
     environment: production
+    concurrency: production
     
     steps:
     - uses: actions/checkout@v3
