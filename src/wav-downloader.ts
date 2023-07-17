@@ -9,7 +9,7 @@ import { GoogleDriveService } from "./googleDriveService";
 import youtubedl from "youtube-dl-exec";
 import { YtFlags } from "./yt-types";
 
-dotenv.config();
+// dotenv.config();
 
 const driveClientId = process.env.GOOGLE_DRIVE_CLIENT_ID || "";
 const driveClientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET || "";
