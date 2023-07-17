@@ -1,13 +1,28 @@
-import fs from "fs/promises";
-import path from "path";
+import dotenv from "dotenv";
+import { GoogleDriveService } from "./googleDriveService";
 import { promisify } from "util";
 import { convertMp3ToWav } from "./mp3-to-wav";
 import { formatFileName } from "./format-file-name";
 import { exec as callbackExec } from "child_process";
+import fs from "fs/promises";
 
 const exec = promisify(callbackExec);
 
+dotenv.config();
+
+const driveClientId = process.env.GOOGLE_DRIVE_CLIENT_ID || "";
+const driveClientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET || "";
+const driveRedirectUri = process.env.GOOGLE_DRIVE_REDIRECT_URI || "";
+const driveRefreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN || "";
+
 export async function wavDownloader(inputData: any, ctx: any) {
+  const googleDriveService = new GoogleDriveService(
+    driveClientId,
+    driveClientSecret,
+    driveRedirectUri,
+    driveRefreshToken
+  );
+  const currentMonth = new Date().getMonth();
   const monthsInPtBr = [
     "Janeiro",
     "Fevereiro",
@@ -22,77 +37,80 @@ export async function wavDownloader(inputData: any, ctx: any) {
     "Novembro",
     "Dezembro",
   ];
+  const folderName = monthsInPtBr[currentMonth];
 
-  const currentMonth = new Date().getMonth();
-  const musicDirectoryPath = `C:/Users/nekel/OneDrive/Área de Trabalho/musicas-pai/${monthsInPtBr[currentMonth]}`;
+  let folder = await googleDriveService
+    .searchFolder(folderName)
+    .catch((error) => {
+      console.error(error);
+      return null;
+    });
 
-  // Create directory if not exists
-  try {
-    await fs.access(musicDirectoryPath);
-  } catch (error) {
-    await fs.mkdir(musicDirectoryPath, { recursive: true });
+  if (!folder) {
+    folder = await googleDriveService.createFolder(folderName);
   }
 
-  console.log("Extraindo URLs dos dados...");
-  ctx.reply("Extraindo URLs da entrada...");
+  console.log("Extracting URLs from data...");
+  ctx.reply("Extracting URLs from input...");
 
   const urls = extractUrls(inputData, ctx);
 
   if (urls.length > 0) {
-    console.log(`${urls.length} URLs encontradas.`);
-    ctx.reply(`${urls.length} URLs encontradas.`);
+    console.log(`${urls.length} URLs found.`);
+    ctx.reply(`${urls.length} URLs found.`);
 
-    const ytDlpCommand = `yt-dlp -x --audio-format mp3 --restrict-filenames -o "${musicDirectoryPath}/%(title)s.%(ext)s" ${urls.join(
+    const ytDlpCommand = `yt-dlp -x --audio-format mp3 --restrict-filenames --progress --newline ${urls.join(
       " "
-    )} --progress --newline`;
+    )}`;
 
-    ctx.reply("Baixando músicas...");
+    ctx.reply("Downloading songs...");
 
     const { stdout, stderr } = await exec(ytDlpCommand);
-    console.log("Download concluído.", stdout, stderr);
-    ctx.reply("Download concluído.");
+    console.log("Download complete.", stdout, stderr);
+    ctx.reply("Download complete.");
 
-    console.log("Listando os arquivos...");
-    const files = await fs.readdir(musicDirectoryPath);
+    console.log(
+      `Converting and uploading ${urls.length} files to Google Drive...`
+    );
+    ctx.reply(
+      `Converting and uploading ${urls.length} files to Google Drive...`
+    );
 
-    console.log(`Renomeando e convertendo ${files.length} arquivos...`);
-    ctx.reply(`Renomeando e convertendo ${files.length} arquivos...`);
+    const promises = urls.map(async (url: string, index: number) => {
+      console.log(`Converting ${url} to .wav format...`);
 
-    const promises = files.map(async (file: string, index: number) => {
-      const oldPath = path.join(musicDirectoryPath, file);
-      const newPath = path.join(musicDirectoryPath, formatFileName(file));
+      const wavFilePath = await convertMp3ToWav(url);
+      console.log(`Converted to .wav format: ${wavFilePath}`);
 
-      await fs.rename(oldPath, newPath);
-      console.log(`Renomeado ${oldPath} para ${newPath}`);
+      await googleDriveService
+        .saveFile(
+          formatFileName(wavFilePath),
+          wavFilePath,
+          "audio/wav",
+          folder?.id
+        )
+        .catch((error: any) => {
+          console.error(error);
+        });
 
-      console.log(`Convertendo ${newPath} para o formato .wav...`);
-
-      const wavFilePath = await convertMp3ToWav(newPath);
-      console.log(`Convertido para o formato .wav: ${wavFilePath}`);
-
-      console.log(`Deletando o arquivo .mp3 original: ${newPath}`);
-      await fs.unlink(newPath);
+      console.log(`Deleting the original .mp3 file: ${wavFilePath}`);
+      await fs.unlink(wavFilePath);
     });
 
     await Promise.all(promises);
 
-    console.log("Todos os arquivos foram renomeados e convertidos.");
-    ctx.reply("Todos os arquivos foram renomeados e convertidos.");
-
-    console.log("Abrindo a pasta de saída na guia do explorer...");
-    ctx.reply("Processo completo. Arquivos prontos.");
-
-    await exec(`start "" "${musicDirectoryPath}"`);
+    console.log("All files have been converted and uploaded.");
+    ctx.reply("All files have been converted and uploaded.");
   } else {
-    console.log("Nenhuma URL encontrada nos dados fornecidos.");
-    ctx.reply("Nenhuma URL encontrada na entrada.");
+    console.log("No URLs found in the provided data.");
+    ctx.reply("No URLs found in the input.");
   }
 }
 
 function extractUrls(data: string, ctx: any) {
   if (typeof data !== "string") {
-    ctx.reply("O formato enviado não é válido.");
-    throw new TypeError("O formato enviado não é válido.");
+    ctx.reply("The format sent is not valid.");
+    throw new TypeError("The format sent is not valid.");
   }
 
   const regex =
@@ -100,8 +118,8 @@ function extractUrls(data: string, ctx: any) {
   const matches = data.match(regex);
 
   if (!matches) {
-    ctx.reply("Não foram encontrados URL's do Youtube.");
-    throw new Error("Não foram encontrados URL's do Youtube.");
+    ctx.reply("No Youtube URLs found.");
+    throw new Error("No Youtube URLs found.");
   }
 
   return matches;

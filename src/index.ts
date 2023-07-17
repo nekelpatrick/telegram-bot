@@ -1,43 +1,57 @@
-import { Bot, webhookCallback } from "grammy";
+// main.ts
 import express from "express";
-import { wavDownloader } from "./wav-downloader";
+import { Bot, Context, SessionFlavor, session, webhookCallback } from "grammy";
+import { baixarCommand } from "./commands/baixarCommand";
+import dotenv from "dotenv";
+import * as path from "path";
+import * as fs from "fs";
+import { GoogleDriveService } from "./googleDriveService";
 
-// Create a bot using the Telegram token
-const bot = new Bot(process.env.TELEGRAM_TOKEN || "");
+dotenv.config();
 
-const introductionMessage = `Aqui estão todos os comandos disponíveis:
-- /baixarMusicas: Baixar músicas a partir de URLs do YouTube`;
+interface SessionData {
+  started?: boolean;
+  command?: string;
+  pizzaCount?: number;
+}
 
-// Handle the /yo command to greet the user
-bot.command("ola", (ctx) => ctx.reply(`Yo ${ctx.from?.username}`));
+export type MyContext = SessionFlavor<SessionData> & Context;
 
-bot.command("baixar", (ctx: any) => {
-  ctx.reply(`Mande um ou vários links do YouTube.`);
-  bot.on("message", async (ctx: any) => {
-    try {
-      // logger();
-      await ctx.reply(`Validando URL's...`);
-      await wavDownloader(ctx.message.text, ctx);
-      await ctx.reply(`Músicas processadas.`);
-      await ctx.reply("👍");
-      ctx.reply(`
-   Baixar mais músicas?
-   - /baixarMusicas: Baixar músicas a partir de URLs do YouTube
-        `);
-    } catch (error) {
-      await ctx.reply("👎");
-      console.error(`Ocorreu um erro: ${error}`);
-      ctx.reply(`
-   Tentar novamente:
-   - /baixarMusicas: Baixar músicas a partir de URLs do YouTube
-        `);
-    }
-  });
+const bot = new Bot<MyContext>(process.env.TELEGRAM_TOKEN || "");
+
+function initial(): SessionData {
+  return { started: false };
+}
+
+bot.use(session({ initial }));
+
+bot.command("start", (ctx) => {
+  ctx.session.started = true;
+  return ctx.reply("Started");
 });
 
-// Handle all other messages and the /start command
+bot.command("ola", (ctx) => {
+  ctx.session.started = true;
+  ctx.reply(`Olá ${ctx.from?.username}`);
+});
 
-// Suggest commands in the menu
+bot.command("baixar", (ctx) => {
+  ctx.session.started = true;
+
+  console.log('Received command "baixar"');
+  ctx.reply("Mande um ou vários links do YouTube.");
+  ctx.session.command = "baixar";
+});
+
+bot.on("message", async (ctx) => {
+  console.log("Received a message");
+  console.log(ctx.session);
+
+  if (ctx.session.command === "baixar") {
+    await baixarCommand(ctx);
+  }
+});
+
 bot.api.setMyCommands([
   { command: "ola", description: "Be greeted by the bot" },
   {
@@ -46,12 +60,20 @@ bot.api.setMyCommands([
   },
 ]);
 
-const replyWithIntro = (ctx: any) => ctx.reply(introductionMessage);
+const replyWithIntro = (ctx: MyContext) => ctx.reply(introductionMessage);
 
 bot.command("start", replyWithIntro);
-bot.on("message", replyWithIntro);
+bot.catch(async (err) => {
+  console.error(`Ocorreu um erro: ${err}`);
+});
 
-// Start the server
+dotenv.config();
+
+console.log(process.env.GOOGLE_DRIVE_CLIENT_ID);
+console.log(process.env.GOOGLE_DRIVE_CLIENT_SECRET);
+console.log(process.env.GOOGLE_DRIVE_REDIRECT_URI);
+console.log(process.env.GOOGLE_DRIVE_REFRESH_TOKEN);
+
 if (process.env.NODE_ENV === "production") {
   // Use Webhooks for the production server
   const app = express();
@@ -66,3 +88,6 @@ if (process.env.NODE_ENV === "production") {
   // Use Long Polling for development
   bot.start();
 }
+
+const introductionMessage = `Aqui estão todos os comandos disponíveis:
+- /baixar: Baixar músicas a partir de URLs do YouTube`;
