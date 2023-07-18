@@ -29,6 +29,7 @@ function getGoogleDriveService() {
 
 async function getFolder(service: GoogleDriveService) {
   const currentMonth = new Date().getMonth();
+
   let folder = await service
     .searchFolder(`musicas-pai/${monthsInPtBr[currentMonth]}`)
     .catch(console.error);
@@ -132,8 +133,8 @@ export async function wavDownloader(inputData: any, ctx: any) {
     return;
   }
 
-  const service = getGoogleDriveService();
-  const folder = await getFolder(service);
+  // const service = getGoogleDriveService();
+  // const folder = await getFolder(service);
 
   await downloadSongs(urls);
   let files = await fs.readdir(musicDirectoryPath);
@@ -170,7 +171,6 @@ export function extractUrls(data: string, ctx?: any) {
   return matches;
 }
 
-const currentMonth = new Date().getMonth();
 const monthsInPtBr = [
   "Janeiro",
   "Fevereiro",
