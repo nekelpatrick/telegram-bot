@@ -6,7 +6,7 @@ import { GoogleDriveService } from "./googleDriveService";
 import youtubedl from "youtube-dl-exec";
 import { convertMp3ToWav } from "./mp3-to-wav";
 import { formatFileName } from "./utils/format-file-name";
-import { YtFlags } from "./yt-types";
+import { YtFlags } from "./types/yt-types";
 import { promisify } from "util";
 
 dotenv.config();
