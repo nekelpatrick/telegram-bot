@@ -5,7 +5,7 @@ import { exec as callbackExec } from "child_process";
 import { GoogleDriveService } from "./googleDriveService";
 import youtubedl from "youtube-dl-exec";
 import { convertMp3ToWav } from "./mp3-to-wav";
-import { formatFileName } from "./format-file-name";
+import { formatFileName } from "./utils/format-file-name";
 import { YtFlags } from "./yt-types";
 import { promisify } from "util";
 
@@ -42,30 +42,48 @@ async function getFolder(service: GoogleDriveService) {
   return folder;
 }
 
-async function downloadSongs(urls: string[]) {
+export async function downloadSongs(urls: string[]) {
   const downloadOptions: YtFlags = {
+    extractAudio: true,
     audioFormat: "mp3",
     output: `${musicDirectoryPath}/%(title)s.%(ext)s`,
     noCheckCertificates: true,
+    // help: true,
   };
 
   return Promise.all(
-    urls.map((url) => youtubedl.exec(url, downloadOptions).catch(console.error))
+    urls.map((url) =>
+      youtubedl(url, downloadOptions)
+        // .then((output) => console.log(output))
+        .catch(console.error)
+    )
   );
 }
 
-async function renameFiles(files: string[]) {
-  const renamedFiles = [];
+// export async function renameFiles(files: string[]) {
+//   const renamedFiles = [];
 
-  for (const file of files) {
+//   for (const file of files) {
+//     const oldPath = path.join(musicDirectoryPath, file);
+//     const newName = formatFileName(file);
+//     const newPath = path.join(musicDirectoryPath, newName);
+
+//     await fs.rename(oldPath, newPath);
+//     renamedFiles.push(newName);
+//   }
+
+//   return renamedFiles;
+// }
+export async function renameFiles(files: string[]) {
+  const renamePromises = files.map((file) => {
     const oldPath = path.join(musicDirectoryPath, file);
     const newName = formatFileName(file);
     const newPath = path.join(musicDirectoryPath, newName);
 
-    await fs.rename(oldPath, newPath);
-    renamedFiles.push(newName);
-  }
+    return fs.rename(oldPath, newPath).then(() => newName);
+  });
 
+  const renamedFiles = await Promise.all(renamePromises);
   return renamedFiles;
 }
 
@@ -87,16 +105,19 @@ async function uploadFiles(
   files: string[]
 ) {
   for (const file of files) {
-    const wavFilePath = path.join(musicDirectoryPath, file);
+    const filePath = path.join(musicDirectoryPath, file);
+    const fileExtension = path.extname(filePath);
 
-    await service
-      .saveFile(
-        path.basename(wavFilePath, ".wav"),
-        wavFilePath,
-        "audio/wav",
-        folder?.id
-      )
-      .catch(console.error);
+    if (fileExtension === ".wav") {
+      await service
+        .saveFile(
+          path.basename(filePath, ".wav"),
+          filePath,
+          "audio/wav",
+          folder?.id
+        )
+        .catch(console.error);
+    }
   }
 }
 
@@ -105,6 +126,15 @@ async function deleteFiles(files: string[]) {
     const wavFilePath = path.join(musicDirectoryPath, file);
 
     await fs.unlink(wavFilePath);
+  }
+}
+
+export async function deleteAllFiles(directoryPath: string) {
+  const files = await fs.readdir(directoryPath);
+
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+    await fs.unlink(filePath);
   }
 }
 
@@ -123,16 +153,20 @@ export async function wavDownloader(inputData: any, ctx: any) {
   let files = await fs.readdir(musicDirectoryPath);
 
   await renameFiles(files);
-  await convertFiles(files);
+  console.log("files renamed");
+  console.log("converting files");
+  let files2 = await fs.readdir(musicDirectoryPath);
+  await convertFiles(files2);
+  let filesToUpload = await fs.readdir(musicDirectoryPath);
 
-  await uploadFiles(service, folder, files);
-  await deleteFiles(files);
+  await uploadFiles(service, folder, filesToUpload);
+  await deleteAllFiles(musicDirectoryPath);
 
   console.info("All files uploaded successfully and local files deleted!");
   ctx.reply("Processo completo. Arquivos prontos.");
 }
 
-function extractUrls(data: string, ctx: any) {
+export function extractUrls(data: string, ctx?: any) {
   if (typeof data !== "string") {
     ctx.reply("O formato enviado não é válido.");
     throw new TypeError("O formato enviado não é válido.");
