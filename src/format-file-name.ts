@@ -30,7 +30,7 @@ export function formatFileName(fileName: string) {
 
   // remove unwanted words
   for (const word of removeWords) {
-    newName = newName.replace(word, "");
+    newName = newName.replace(new RegExp(word, "gi"), ""); // using 'gi' flag for case-insensitive and global match
   }
 
   // apply removal patterns
@@ -38,13 +38,15 @@ export function formatFileName(fileName: string) {
     newName = newName.replace(pattern, " ");
   }
 
+  // Remove multiple space characters
+  newName = newName.replace(/\s+/g, " ");
+
   // convert to title case and trim spaces
   newName = newName
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
-    .replace(/\s+/g, " ")
     .trim();
 
-  return newName + ".mp3";
+  return newName;
 }
