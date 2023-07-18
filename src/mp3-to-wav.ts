@@ -7,6 +7,7 @@ function isMp3File(mp3Filename: string) {
 }
 
 export function convertMp3ToWav(mp3Filename: string): Promise<string> {
+  console.log(mp3Filename);
   return new Promise((resolve, reject) => {
     if (!isMp3File(mp3Filename)) {
       throw new Error(`Not an mp3 file`);
@@ -18,6 +19,7 @@ export function convertMp3ToWav(mp3Filename: string): Promise<string> {
       .audioChannels(2)
       .audioFrequency(44100)
       .on("error", (err: any) => {
+        console.log(err);
         reject(err);
       })
       .on("end", () => {
