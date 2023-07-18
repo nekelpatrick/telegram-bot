@@ -60,20 +60,6 @@ export async function downloadSongs(urls: string[]) {
   );
 }
 
-// export async function renameFiles(files: string[]) {
-//   const renamedFiles = [];
-
-//   for (const file of files) {
-//     const oldPath = path.join(musicDirectoryPath, file);
-//     const newName = formatFileName(file);
-//     const newPath = path.join(musicDirectoryPath, newName);
-
-//     await fs.rename(oldPath, newPath);
-//     renamedFiles.push(newName);
-//   }
-
-//   return renamedFiles;
-// }
 export async function renameFiles(files: string[]) {
   const renamePromises = files.map((file) => {
     const oldPath = path.join(musicDirectoryPath, file);
@@ -99,35 +85,35 @@ async function convertFiles(files: string[]) {
   return convertedFiles;
 }
 
-async function uploadFiles(
-  service: GoogleDriveService,
-  folder: { id: any; name?: string },
-  files: string[]
-) {
-  for (const file of files) {
-    const filePath = path.join(musicDirectoryPath, file);
-    const fileExtension = path.extname(filePath);
+// async function uploadFiles(
+//   service: GoogleDriveService,
+//   folder: { id: any; name?: string },
+//   files: string[]
+// ) {
+//   for (const file of files) {
+//     const filePath = path.join(musicDirectoryPath, file);
+//     const fileExtension = path.extname(filePath);
 
-    if (fileExtension === ".wav") {
-      await service
-        .saveFile(
-          path.basename(filePath, ".wav"),
-          filePath,
-          "audio/wav",
-          folder?.id
-        )
-        .catch(console.error);
-    }
-  }
-}
+//     if (fileExtension === ".wav") {
+//       await service
+//         .saveFile(
+//           path.basename(filePath, ".wav"),
+//           filePath,
+//           "audio/wav",
+//           folder?.id
+//         )
+//         .catch(console.error);
+//     }
+//   }
+// }
 
-async function deleteFiles(files: string[]) {
-  for (const file of files) {
-    const wavFilePath = path.join(musicDirectoryPath, file);
+// async function deleteFiles(files: string[]) {
+//   for (const file of files) {
+//     const wavFilePath = path.join(musicDirectoryPath, file);
 
-    await fs.unlink(wavFilePath);
-  }
-}
+//     await fs.unlink(wavFilePath);
+//   }
+// }
 
 export async function deleteAllFiles(directoryPath: string) {
   const files = await fs.readdir(directoryPath);
@@ -159,8 +145,8 @@ export async function wavDownloader(inputData: any, ctx: any) {
   await convertFiles(files2);
   let filesToUpload = await fs.readdir(musicDirectoryPath);
 
-  await uploadFiles(service, folder, filesToUpload);
-  await deleteAllFiles(musicDirectoryPath);
+  // await uploadFiles(service, folder, filesToUpload);
+  // await deleteAllFiles(musicDirectoryPath);
 
   console.info("All files uploaded successfully and local files deleted!");
   ctx.reply("Processo completo. Arquivos prontos.");
