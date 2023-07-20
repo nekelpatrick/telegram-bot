@@ -71,20 +71,7 @@ function replyWithIntro(ctx: MyContext) {
 
 // BOT STARTUP
 if (process.env.NODE_ENV === "production") {
-  startInProduction();
-} else {
-  startBot();
-}
-
-function startBot() {
-  bot.start().catch((err) => {
-    console.error(`Failed to start the bot: ${err}`);
-    console.log("Retrying in 10 seconds...");
-    setTimeout(startBot, 10000);
-  });
-}
-
-function startInProduction() {
+  // Use Webhooks for the production server
   const app = express();
   app.use(express.json());
   app.use(webhookCallback(bot, "express"));
@@ -93,6 +80,9 @@ function startInProduction() {
   app.listen(PORT, () => {
     console.log(`Bot listening on port ${PORT}`);
   });
+} else {
+  // Use Long Polling for development
+  bot.start();
 }
 
 // MESSAGE DEFINITIONS
