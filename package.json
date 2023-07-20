@@ -25,7 +25,7 @@
     "chatbot",
     "text-effects"
   ],
-  "author": "eludadev",
+  "author": "nekeldev",
   "license": "MIT",
   "devDependencies": {
     "@types/express": "^4.17.14",
