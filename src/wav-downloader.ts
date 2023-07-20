@@ -9,7 +9,7 @@ import { formatFileName } from "./utils/format-file-name";
 import { YtFlags } from "./types/yt-types";
 import { promisify } from "util";
 
-dotenv.config();
+//dotenv.config();
 
 const exec = promisify(callbackExec);
 const driveClientId = process.env.GOOGLE_DRIVE_CLIENT_ID || "";

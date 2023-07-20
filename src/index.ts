@@ -12,7 +12,7 @@ const {
   AuthorizationCode,
 } = require("simple-oauth2");
 
-dotenv.config();
+//dotenv.config();
 
 interface SessionData {
   started?: boolean;
