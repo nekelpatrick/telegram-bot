@@ -158,15 +158,15 @@ function getCredentials() {
   });
 }
 
-async function uploadFiles() {
-  try {
-    const creds = await getCredentials();
-    console.log(creds);
-    await uploadDirectory(creds);
-    console.log("Upload completed");
-  } catch (error) {
-    console.error("Error uploading files", error);
-  }
-}
+// async function uploadFiles() {
+//   try {
+//     const creds = await getCredentials();
+//     console.log(creds);
+//     await uploadDirectory(creds);
+//     console.log("Upload completed");
+//   } catch (error) {
+//     console.error("Error uploading files", error);
+//   }
+// }
 
-uploadFiles();
+// uploadFiles();
