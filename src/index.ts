@@ -89,13 +89,6 @@ if (process.env.NODE_ENV === "production") {
 const introductionMessage = `Aqui estão todos os comandos disponíveis:
 - /baixar: Baixar músicas a partir de URLs do YouTube`;
 
-const app = express();
-app.use(express.json());
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Bot listening on port ${PORT}`);
-});
-
 export let tokenResponseToken: any;
 
 function getCredentials() {
