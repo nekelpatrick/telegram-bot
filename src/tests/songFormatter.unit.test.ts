@@ -1,4 +1,4 @@
-import { formatFileName } from "../format-file-name";
+import { formatFileName } from "../utils/format-file-name";
 
 describe("formatFileName", () => {
   test("should convert to title case", () => {

@@ -1,11 +1,10 @@
-const fs = require("fs").promises; // assuming you're using fs.promises API
+const fs = require("fs").promises;
 import {
   deleteAllFiles,
   downloadSongs,
   extractUrls,
   renameFiles,
 } from "../wav-downloader";
-import { formatFileName } from "../format-file-name";
 import { getFileNames } from "../utils/extractFileNames";
 
 describe("song download and rename process", () => {
