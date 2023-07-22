@@ -64,7 +64,7 @@ export async function deleteAllFiles(directoryPath: string) {
   }
 }
 
-export async function wavDownloader(inputData: any, ctx: any) {
+export async function wavDownloader(inputData: any, ctx?: any) {
   const urls = extractUrls(inputData, ctx);
 
   if (urls.length === 0) {
