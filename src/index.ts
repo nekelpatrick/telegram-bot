@@ -5,14 +5,6 @@ import { baixarCommand } from "./commands/baixarCommand";
 import axios from "axios";
 import qs from "qs";
 
-const {
-  ClientCredentials,
-  ResourceOwnerPassword,
-  AuthorizationCode,
-} = require("simple-oauth2");
-
-//dotenv.config();
-
 interface SessionData {
   started?: boolean;
   command?: string;
