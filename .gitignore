@@ -7,3 +7,4 @@ node_modules/
 *webm
 *mkv
 *sh
+/output
