@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 import * as path from "path";
 import * as fs from "fs/promises";
+import { promises as fsPromises } from "fs";
+
 import { exec as callbackExec } from "child_process";
 import youtubedl from "youtube-dl-exec";
 import { convertMp3ToWav } from "./mp3-to-wav";
@@ -50,11 +52,14 @@ async function convertFiles(files: string[]) {
     const filePath = path.join(musicDirectoryPath, file);
     const wavFilePath = await convertMp3ToWav(filePath);
     convertedFiles.push(path.basename(wavFilePath));
+
+    if (file.endsWith(".mp3")) {
+      await fsPromises.unlink(filePath);
+    }
   }
 
   return convertedFiles;
 }
-
 export async function deleteAllFiles(directoryPath: string) {
   const files = await fs.readdir(directoryPath);
 
@@ -68,7 +73,7 @@ export async function wavDownloader(inputData: any, ctx?: any) {
   const urls = extractUrls(inputData, ctx);
 
   if (urls.length === 0) {
-    ctx.reply("Nenhuma URL encontrada na entrada.");
+    // ctx.reply("Nenhuma URL encontrada na entrada.");
     return;
   }
 
@@ -81,16 +86,16 @@ export async function wavDownloader(inputData: any, ctx?: any) {
   let files2 = await fs.readdir(musicDirectoryPath);
   await convertFiles(files2);
   // let filesToUpload = await fs.readdir(musicDirectoryPath);
-  const uploader = new FileUploader("/tmp", "/musicas-pai");
-  uploader.uploadFiles();
+  const uploader = new FileUploader("./tmp", "/musicas-pai");
+  await uploader.uploadFiles();
 
   console.info("All files uploaded successfully and local files deleted!");
-  ctx.reply("Processo completo. Arquivos prontos.");
+  // ctx.reply("Processo completo. Arquivos prontos.");
 }
 
 export function extractUrls(data: string, ctx?: any) {
   if (typeof data !== "string") {
-    ctx.reply("O formato enviado não é válido.");
+    // ctx.reply("O formato enviado não é válido.");
     throw new TypeError("O formato enviado não é válido.");
   }
 
@@ -99,7 +104,7 @@ export function extractUrls(data: string, ctx?: any) {
   const matches = data.match(regex);
 
   if (!matches) {
-    ctx.reply("Não foram encontrados URL's do Youtube.");
+    // ctx.reply("Não foram encontrados URL's do Youtube.");
     throw new Error("Não foram encontrados URL's do Youtube.");
   }
 
