@@ -88,11 +88,11 @@ export async function wavDownloader(inputData: any, ctx?: any) {
     let files2 = await fs.readdir(musicDirectoryPath);
     await convertFiles(files2);
     // let filesToUpload = await fs.readdir(musicDirectoryPath);
-    await fileZipper("./tmp", "./output/musicas.zip");
-    await deleteAllFiles("./tmp");
-    const uploader = new FileUploader("./output", "/musicas-pai");
+    // await fileZipper("./tmp", "./output/musicas.zip");
+    // await deleteAllFiles("./tmp");
+    const uploader = new FileUploader("./tmp", "/musicas-pai");
     await uploader.uploadFiles().catch(console.error);
-    // await deleteAllFiles("./output");
+    await deleteAllFiles("./tmp");
 
     console.info("All files uploaded successfully and local files deleted!");
     // ctx.reply("Processo completo. Arquivos prontos.");
