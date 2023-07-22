@@ -10,6 +10,7 @@ import { formatFileName } from "./utils/format-file-name";
 import { YtFlags } from "./types/yt-types";
 import { promisify } from "util";
 import FileUploader from "./uploadFiles";
+import { fileZipper } from "./utils/zipper";
 
 //dotenv.config();
 
@@ -70,27 +71,34 @@ export async function deleteAllFiles(directoryPath: string) {
 }
 
 export async function wavDownloader(inputData: any, ctx?: any) {
-  const urls = extractUrls(inputData, ctx);
+  try {
+    const urls = extractUrls(inputData, ctx);
 
-  if (urls.length === 0) {
-    // ctx.reply("Nenhuma URL encontrada na entrada.");
-    return;
+    if (urls.length === 0) {
+      // ctx.reply("Nenhuma URL encontrada na entrada.");
+      return;
+    }
+
+    await downloadSongs(urls);
+    let files = await fs.readdir(musicDirectoryPath);
+
+    await renameFiles(files);
+    console.log("files renamed");
+    console.log("converting files");
+    let files2 = await fs.readdir(musicDirectoryPath);
+    await convertFiles(files2);
+    // let filesToUpload = await fs.readdir(musicDirectoryPath);
+    await fileZipper("./tmp", "./output/musicas.zip");
+    await deleteAllFiles("./tmp");
+    const uploader = new FileUploader("./output", "/musicas-pai");
+    await uploader.uploadFiles().catch(console.error);
+    // await deleteAllFiles("./output");
+
+    console.info("All files uploaded successfully and local files deleted!");
+    // ctx.reply("Processo completo. Arquivos prontos.");
+  } catch (error) {
+    console.error("Error in wavDownloader: ", error);
   }
-
-  await downloadSongs(urls);
-  let files = await fs.readdir(musicDirectoryPath);
-
-  await renameFiles(files);
-  console.log("files renamed");
-  console.log("converting files");
-  let files2 = await fs.readdir(musicDirectoryPath);
-  await convertFiles(files2);
-  // let filesToUpload = await fs.readdir(musicDirectoryPath);
-  const uploader = new FileUploader("./tmp", "/musicas-pai");
-  await uploader.uploadFiles();
-
-  console.info("All files uploaded successfully and local files deleted!");
-  // ctx.reply("Processo completo. Arquivos prontos.");
 }
 
 export function extractUrls(data: string, ctx?: any) {
@@ -110,18 +118,3 @@ export function extractUrls(data: string, ctx?: any) {
 
   return matches;
 }
-
-const monthsInPtBr = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
