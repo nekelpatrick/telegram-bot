@@ -1,39 +1,39 @@
-const fs = require("fs");
-const path = require("path");
-const oneDriveAPI = require("onedrive-api");
+import fs from "fs";
+import { Dropbox } from "dropbox";
+import dotenv from "dotenv";
+import path from "path";
 
-// Replace this with your actual access token
-export async function uploadDirectory(accessToken: any) {
-  // Get list of files in the /tmp directory
-  const tmpDir = "tmp";
-  fs.readdir(tmpDir, (err: any, files: any[]) => {
-    if (err) {
-      console.error(`Error reading directory: ${err}`);
-      return;
-    }
+dotenv.config();
 
-    // Upload each file to OneDrive
-    files.forEach((file: any) => {
-      const filePath = path.join(tmpDir, file);
+class FileUploader {
+  dbx: Dropbox;
+  localFolderPath: string;
+  dropboxFolderPath: string;
 
-      // Ensure the path is a file, not a directory
-      if (fs.lstatSync(filePath).isFile()) {
-        const readableStream = fs.createReadStream(filePath);
+  constructor(localFolderPath: string, dropboxFolderPath: string) {
+    this.dbx = new Dropbox({ accessToken: process.env.DROPBOX_TOKEN });
+    this.localFolderPath = localFolderPath;
+    this.dropboxFolderPath = dropboxFolderPath;
+  }
 
-        oneDriveAPI.items
-          .uploadSimple({
-            accessToken,
-            filename: file,
-            readableStream,
-          })
-          .then((item: any) => {
-            console.log(`Uploaded ${file} to OneDrive successfully`);
-            console.log(item);
-          })
-          .catch((error: any) => {
-            console.error(`Error uploading ${file} to OneDrive: ${error}`);
-          });
-      }
+  uploadFiles(): void {
+    const files = fs.readdirSync(this.localFolderPath);
+
+    files.forEach((file) => {
+      const filePath = path.join(this.localFolderPath, file);
+      const fileContent = fs.readFileSync(filePath);
+      const dropboxPath = path.posix.join(this.dropboxFolderPath, file);
+
+      this.dbx
+        .filesUpload({ path: dropboxPath, contents: fileContent })
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     });
-  });
+  }
 }
+
+export default FileUploader;
